@@ -31,35 +31,41 @@ forces a triangle through neighbouring geometry; the same is true of any learned
 guesses geometry. The binary's own extraction (B) is the clean high-detail mesh; it still has small
 openings. D is the clean solid mesh; it loses geometric fur detail but keeps colour.
 
-## D — the delivered solid mesh
+## D — the solid branch, and the finer pass
+
+The first solid used the 2.5 mm copy mesh:
 
 ```
 remesh_solid.py capped.ply solid.ply --pitch 0.0025 --smooth 4 --close 1
 bake_texture.py --target solid.ply --source mesh_textured.glb --out solid_baked.ply
 ```
 
-| metric | value |
-|---|---|
-| vertices / faces | 168,083 / 336,630 |
-| components | 1 |
-| boundary edges | 0 |
-| non-manifold edges / vertices | 0 / 0 |
-| self-intersecting face pairs | 0 |
-| folds < 10°, zero-area faces | 0 / 0 |
-| angles < 1°, aspect > 30 | 0, 0 (largest 4.9) |
-| volume | 5.93 L |
-| Euler | −232 |
-| `--check 1` | **PASS** |
+That passed (336,630 faces, 0 boundary, 0 non-manifold, 0 self-intersections, 0 folds) but visibly
+softened the fur. Re-solidifying the **873 k detail extraction** at a finer pitch recovers it:
 
-The atlas bake used the 4,096² texture embedded in `mesh_textured.glb`; median projection distance
-3.4 mm, p95 4.9 cm (the unobserved underside). The UV convention is `1 − v`; using `v` directly
-produced a mottled brown result (MAE 38.6 vs 1.5 against the known vertex colours).
+| pitch | faces | boundary | self-int | folds | `--check 1` |
+|---|---|---|---|---|---|
+| 2.5 mm | 336,630 | 0 | 0 | 0 | PASS (soft) |
+| 2.1 mm | 705,852 | 0 | 0 | 0 | PASS |
+| 2.0 mm | 808,862 | 0 | 0 | 1 | FAIL |
+| **1.9 mm** | **917,700** | **0** | **0** | **0** | **PASS** |
+| 1.5 mm | 1,611,846 | 0 | 0 | 1 | FAIL |
+
+The delivered mesh is the 1.9 mm solid: 457,606 vertices / 917,700 faces, 1 component, 0
+non-manifold, 0 self-intersections, 0 folds, 4,096² atlas baked (median 4.6 mm). 2.0 and 1.5 mm each
+land on a single fold, and extra Taubin adds self-intersections, so screen pitch in 0.1 mm steps at
+smooth 2.
+
+The atlas bake uses the 4,096² texture embedded in `mesh_textured.glb`; the UV convention is `1 − v`
+(using `v` directly gave MAE 38.6 vs 1.5 against the known vertex colours). `on_surface` refuses
+>~1M candidate faces, so `bake_texture.py` projects 20 k vertices per call.
 
 ## When to use which
 
 - **Appearance / turntable:** the splat. The mesh is a byproduct of a fur-covered 87-camera capture.
-- **Downstream geometry (collision, print, export):** D. Watertight, manifold, quality PASS.
-- **Maximum surface detail with small openings acceptable:** B (873 k faces).
+- **Downstream geometry (collision, print, export):** the 1.9 mm solid. Watertight, manifold, PASS,
+  and visibly detailed; the 2.5 mm solid is the lighter fallback.
+- **Raw maximum detail, closure not required:** B (873 k faces, 4,384 small openings).
 
 ## Traps
 

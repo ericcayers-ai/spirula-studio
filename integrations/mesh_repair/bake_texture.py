@@ -77,7 +77,18 @@ def main() -> int:
     h, w = img.shape[:2]
 
     query = trimesh.proximity.ProximityQuery(src)
-    pts, dist, tri = query.on_surface(np.asarray(target.vertices, dtype=np.float64))
+    verts = np.asarray(target.vertices, dtype=np.float64)
+    # on_surface builds a candidate list per call and refuses >~1M faces; chunk it
+    chunk = 20000
+    pts, dist, tri = [], [], []
+    for i in range(0, len(verts), chunk):
+        p, d, t = query.on_surface(verts[i:i + chunk])
+        pts.append(p)
+        dist.append(d)
+        tri.append(t)
+    pts = np.vstack(pts)
+    dist = np.concatenate(dist)
+    tri = np.concatenate(tri)
     bary = barycentric(pts, np.asarray(src.triangles)[tri])
     tri_uv = uv[np.asarray(src.faces)[tri]]
     out_uv = np.einsum("ij,ijk->ik", bary, tri_uv)

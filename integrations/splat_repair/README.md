@@ -40,6 +40,13 @@ Prerequisites, none of which are automatic:
 At 576×1024 on an A100 the paper reports 0.355 s/frame; an 8 GB Ada card will be several times
 slower and may need `--max-side 768`. Treat it as an offline enhancer, not real-time.
 
+**Measured on this machine, 2026-11-26.** The code is NVIDIA-licensed (non-commercial) and pins
+diffusers 0.25.1, so it is deliberately **not vendored here**; the smoke ran from
+`C:\spirula-work\tools\Difix3D` with an isolated venv and the `nvidia/difix` weights. One 512×512
+eval render took **107 s with a 10.36 GB peak** (shared-memory spill on the 8 GB card). It sharpened
+the face slightly, but invented a beige cushion under the body and left rainbow fringes at the mask
+edge. Useful as an offline still enhancer with a composite pass; not a real-time fixer.
+
 ## doctor.py
 
 `doctor.py` is the gate: it prints GPU/VRAM, torch, diffusers, whether a Difix class exists, whether

@@ -51,10 +51,15 @@ softened the fur. Re-solidifying the **873 k detail extraction** at a finer pitc
 | **1.9 mm** | **917,700** | **0** | **0** | **0** | **PASS** |
 | 1.5 mm | 1,611,846 | 0 | 0 | 1 | FAIL |
 
-The delivered mesh is the 1.9 mm solid: 457,606 vertices / 917,700 faces, 1 component, 0
-non-manifold, 0 self-intersections, 0 folds, 4,096² atlas baked (median 4.6 mm). 2.0 and 1.5 mm each
-land on a single fold, and extra Taubin adds self-intersections, so screen pitch in 0.1 mm steps at
-smooth 2.
+The **max-detail** variant is the 1.9 mm/close-1 solid: 457,606 vertices / 917,700 faces, 1
+component, 0 non-manifold, 0 self-intersections, 0 folds, 4,096² atlas baked (median 4.6 mm) — but it
+is watertight, **not tunnel-free**: Euler −1,244, genus 623.
+
+The **delivered** mesh is the sealed 1.9 mm close-2/smooth-2 variant: 392,498 vertices / 786,352
+faces, 0 boundary, 0 non-manifold, 0 self-intersections, 0 folds, `--check 1` PASS, **Euler −678,
+genus 340**, 3.66 L, 4,096² atlas baked (median 4.34 mm). Smooth 8 at close 2 re-adds 6
+self-intersections; close 3 fails with 6 + 1 fold. Zero genus needs a MeshFix-class pass (GPL, not
+used). 2.0 and 1.5 mm each land on a single fold, so screen pitch in 0.1 mm steps at smooth 2.
 
 The atlas bake uses the 4,096² texture embedded in `mesh_textured.glb`; the UV convention is `1 − v`
 (using `v` directly gave MAE 38.6 vs 1.5 against the known vertex colours). `on_surface` refuses
